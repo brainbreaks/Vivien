@@ -16,54 +16,62 @@ library(pracma)
 library(Gviz)
 devtools::load_all('breaktools')
 
-gviz_tlxdf_track = function(tlx_df, genome_info, chrom, range, name="", produce_density=F, split_strands=F, show_legend=F, cex=1)
+gviz_tlxdf_track = function(tlx_df, group=c("all", "sample", "group"), genome_info, chrom, range, name="", produce_density=F, split=c("strand", "none", "treatment"), show_legend=F, cex=1)
 {
   tlx_df_plot = tlx_df %>% dplyr::mutate(strand=ifelse(Strand=="-1", "-", "+"))
-  if(produce_density) {
-    if(!split_strands) {
-      tlx_df_plot = tlx_df_plot %>% dplyr::mutate(strand=".")
-    }
 
-    density_df = tlx_df_plot %>%
-      dplyr::group_by(seqnames, strand) %>%
-      dplyr::do((function(z) {
-        zz<<-z
-        d = density(z$start, from=range[1], to=range[2], bw=1e4, n=1000)
-        d.bin = d$x[2L] - d$x[1L]
-        d.count = zoo::rollsum(d$y, 2)*d.bin*nrow(z)/2
+  if(!split_strands) {
+    tlx_df_plot = tlx_df_plot %>% dplyr::mutate(strand=".")
+  }
 
-        data.frame(start=d$x[-length(d$x)], end=d$x[-1], score=ifelse(z$strand[1]=="-", -1, 1) * d.count)
-      })(.)) %>%
-      dplyr::ungroup()
+  track_tlx = c()
+  for(s in unique(tlx_df_plot$tlx_sample)) {
+    tlx_df_s = tlx_df_plot %>% dplyr::filter(tlx_sample==s)
 
-    if(split_strands) {
-      groups_factor = c("+", "-")
-      density_df = density_df %>% reshape2::dcast(seqnames + start + end ~ strand, value.var="score")
+    if(produce_density) {
+      density_df = tlx_df_s %>%
+        dplyr::group_by(seqnames, strand) %>%
+        dplyr::do((function(z) {
+          zz<<-z
+          d = density(z$start, from=range[1], to=range[2], bw=1e4, n=1000)
+          d.bin = d$x[2L] - d$x[1L]
+          d.count = zoo::rollsum(d$y, 2)*d.bin*nrow(z)/2
+
+          data.frame(start=d$x[-length(d$x)], end=d$x[-1], score=ifelse(z$strand[1]=="-", -1, 1) * d.count)
+        })(.)) %>%
+        dplyr::ungroup()
+
+      if(split_strands) {
+        groups_factor = c("+", "-")
+        density_df = density_df %>% reshape2::dcast(seqnames + start + end ~ strand, value.var="score")
+      } else {
+        groups_factor = NULL
+        density_df = density_df %>% dplyr::select(seqnames, start, end, score)
+      }
+
+      density_ranges = GenomicRanges::makeGRangesFromDataFrame(density_df, seqinfo=genome_info, keep.extra.columns=T)
+      return(Gviz::DataTrack(density_ranges, name=name, chromosome=chrom, type="hist", window=-1, windowSize=10000, groups=groups_factor, legend=show_legend, cex.legend=cex*1.5, cex.title=cex*1))
     } else {
       groups_factor = NULL
-      density_df = density_df %>% dplyr::select(seqnames, start, end, score)
-    }
+      if(split_strands) {
+        groups_factor = rep(c("+", "-"), each=2)
+        tlx_df_s = tlx_df_s %>%
+          dplyr::group_by(seqnames, start, end) %>%
+          dplyr::summarise(plus1=ifelse(any(strand=="+"), 0, NA_real_), plus2=ifelse(any(strand=="+"), 1, NA_real_), minus1=ifelse(any(strand=="-"), -1, NA_real_),  minus2=ifelse(any(strand=="-"), 0, NA_real_)) %>%
+          dplyr::ungroup()
+      } else {
+        tlx_df_s = tlx_df_s %>%
+          dplyr::group_by(seqnames, start, end) %>%
+          dplyr::summarise(any1=0, any2=1) %>%
+          dplyr::ungroup()
+      }
 
-    density_ranges = GenomicRanges::makeGRangesFromDataFrame(density_df, seqinfo=genome_info, keep.extra.columns=T)
-    return(Gviz::DataTrack(density_ranges, name=name, chromosome=chrom, type="hist", window=-1, windowSize=10000, groups=groups_factor, legend=show_legend, cex.legend=cex*1.5, cex.title=cex*1))
-  } else {
-    groups_factor = NULL
-    if(split_strands) {
-    groups_factor = rep(c("+", "-"), each=2)
-    tlx_df_plot = tlx_df_plot %>%
-      dplyr::group_by(seqnames, start, end) %>%
-      dplyr::summarise(plus1=ifelse(any(strand=="+"), 0, NA_real_), plus2=ifelse(any(strand=="+"), 1, NA_real_), minus1=ifelse(any(strand=="-"), -1, NA_real_),  minus2=ifelse(any(strand=="-"), 0, NA_real_)) %>%
-      dplyr::ungroup()
-    } else {
-    tlx_df_plot = tlx_df_plot %>%
-      dplyr::group_by(seqnames, start, end) %>%
-      dplyr::summarise(any1=0, any2=1) %>%
-      dplyr::ungroup()
+      bed_sum_ranges = GenomicRanges::makeGRangesFromDataFrame(tlx_df_s, seqinfo=genome_info, keep.extra.columns=T)
+      track_tlx = c(track_tlx, Gviz::DataTrack(bed_sum_ranges, name=name, chromosome=chrom, showAxis=F, type="h", groups=groups_factor, legend=show_legend, cex.legend=cex*1.5, cex.title=cex*1))
     }
-
-    bed_sum_ranges = GenomicRanges::makeGRangesFromDataFrame(tlx_df_plot, seqinfo=genome_info, keep.extra.columns=T)
-    return(Gviz::DataTrack(bed_sum_ranges, name=name, chromosome=chrom, showAxis=F, type="h", groups=groups_factor, legend=show_legend, cex.legend=cex*1.5, cex.title=cex*1))
   }
+
+  track_tlx
 }
 
 main = function()
