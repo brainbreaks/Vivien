@@ -1,6 +1,3 @@
-[submodule "data/tlx/breaktools"]
-	path = data/tlx/breaktools
-	url = git@github.com:brainbreaks/breaktools.git
 [submodule "breaktools"]
 	path = breaktools
 	url = git@github.com:brainbreaks/breaktools.git

@@ -1,29 +1,29 @@
 sample	path	group	group_i	control
-LC0024	data/tlx/LC0024_B400_005_results.txt	Perental cell (NXP010)	1	T
-VI020	data/tlx/VI020_B400_006_results.txt	Perental cell (NXP010)	2	T
-VI047	data/tlx/VI047_B400_011_results.txt	Perental cell (NXP010)	3	T
-VI053	data/tlx/VI053_B400_012_results.txt	Perental cell (NXP010)	4	T
-VI021	data/tlx/VI021_B400_006_results.txt	Perental cell (NXP010)	1	F
-VI028	data/tlx/VI028_B400_006_results.txt	Perental cell (NXP010)	2	F
-VI048	data/tlx/VI048_B400_011_results.txt	Perental cell (NXP010)	3	F
-VI054	data/tlx/VI054_B400_012_results.txt	Perental cell (NXP010)		F
-LC0027	data/tlx/LC0027_B400_005_results.txt	Ctnna2 allelic deletion (47/5)	1	T
-VI022	data/tlx/VI022_B400_006_results.txt	Ctnna2 allelic deletion (47/5)	2	T
-VI043	data/tlx/VI043_B400_010_results.txt	Ctnna2 allelic deletion (47/5)	3	T
-VI049	data/tlx/VI049_B400_011_results.txt	Ctnna2 allelic deletion (47/5)	4	T
-VI055	data/tlx/VI055_B400_012_results.txt	Ctnna2 allelic deletion (47/5)	5	T
-VI029	data/tlx/VI029_B400_006_results.txt	Ctnna2 allelic deletion (47/5)	1	F
-VI023	data/tlx/VI023_B400_006_results.txt	Ctnna2 allelic deletion (47/5)	2	F
-VI044	data/tlx/VI044_B400_010_results.txt	Ctnna2 allelic deletion (47/5)	3	F
-VI050	data/tlx/VI050_B400_011_results.txt	Ctnna2 allelic deletion (47/5)	4	F
-VI056	data/tlx/VI056_B400_012_results.txt	Ctnna2 allelic deletion (47/5)	5	F
-LC0025	data/tlx/LC0025_B400_005_results.txt	Ctnna2 allelic+promoter deletion (18/4)	1	T
-VI057	data/tlx/VI057_B400_012_results.txt	Ctnna2 allelic+promoter deletion (18/4)	2	T
-VI034	data/tlx/VI034_B400_006_results.txt	Ctnna2 allelic+promoter deletion (18/4)	1	F
-VI058	data/tlx/VI058_B400_012_results.txt	Ctnna2 allelic+promoter deletion (18/4)	2	F
-LC0026	data/tlx/LC0026_B400_005_results.txt	Ctnna2 allelic+promoter deletion (38/3)	1	T
-VI045	data/tlx/VI045_B400_010_results.txt	Ctnna2 allelic+promoter deletion (38/3)	2	T
-VI051	data/tlx/VI051_B400_011_results.txt	Ctnna2 allelic+promoter deletion (38/3)	3	T
-VI033	data/tlx/VI033_B400_006_results.txt	Ctnna2 allelic+promoter deletion (38/3)	1	F
-VI046	data/tlx/VI046_B400_010_results.txt	Ctnna2 allelic+promoter deletion (38/3)	2	F
-VI052	data/tlx/VI052_B400_011_results.txt	Ctnna2 allelic+promoter deletion (38/3)	3	F
+LC0024	data/tlx/LC0024_B400_005_result.tlx	Perental cell (NXP010)	1	T
+VI020	data/tlx/VI020_B400_006_result.tlx	Perental cell (NXP010)	2	T
+VI047	data/tlx/VI047_B400_011_result.tlx	Perental cell (NXP010)	3	T
+VI053	data/tlx/VI053_B400_012_result.tlx	Perental cell (NXP010)	4	T
+VI021	data/tlx/VI021_B400_006_result.tlx	Perental cell (NXP010)	1	F
+VI028	data/tlx/VI028_B400_006_result.tlx	Perental cell (NXP010)	2	F
+VI048	data/tlx/VI048_B400_011_result.tlx	Perental cell (NXP010)	3	F
+VI054	data/tlx/VI054_B400_012_result.tlx	Perental cell (NXP010)		F
+LC0027	data/tlx/LC0027_B400_005_result.tlx	Ctnna2 allelic deletion (47/5)	1	T
+VI022	data/tlx/VI022_B400_006_result.tlx	Ctnna2 allelic deletion (47/5)	2	T
+VI043	data/tlx/VI043_B400_010_result.tlx	Ctnna2 allelic deletion (47/5)	3	T
+VI049	data/tlx/VI049_B400_011_result.tlx	Ctnna2 allelic deletion (47/5)	4	T
+VI055	data/tlx/VI055_B400_012_result.tlx	Ctnna2 allelic deletion (47/5)	5	T
+VI029	data/tlx/VI029_B400_006_result.tlx	Ctnna2 allelic deletion (47/5)	1	F
+VI023	data/tlx/VI023_B400_006_result.tlx	Ctnna2 allelic deletion (47/5)	2	F
+VI044	data/tlx/VI044_B400_010_result.tlx	Ctnna2 allelic deletion (47/5)	3	F
+VI050	data/tlx/VI050_B400_011_result.tlx	Ctnna2 allelic deletion (47/5)	4	F
+VI056	data/tlx/VI056_B400_012_result.tlx	Ctnna2 allelic deletion (47/5)	5	F
+LC0025	data/tlx/LC0025_B400_005_result.tlx	Ctnna2 allelic+promoter deletion (18/4)	1	T
+VI057	data/tlx/VI057_B400_012_result.tlx	Ctnna2 allelic+promoter deletion (18/4)	2	T
+VI034	data/tlx/VI034_B400_006_result.tlx	Ctnna2 allelic+promoter deletion (18/4)	1	F
+VI058	data/tlx/VI058_B400_012_result.tlx	Ctnna2 allelic+promoter deletion (18/4)	2	F
+LC0026	data/tlx/LC0026_B400_005_result.tlx	Ctnna2 allelic+promoter deletion (38/3)	1	T
+VI045	data/tlx/VI045_B400_010_result.tlx	Ctnna2 allelic+promoter deletion (38/3)	2	T
+VI051	data/tlx/VI051_B400_011_result.tlx	Ctnna2 allelic+promoter deletion (38/3)	3	T
+VI033	data/tlx/VI033_B400_006_result.tlx	Ctnna2 allelic+promoter deletion (38/3)	1	F
+VI046	data/tlx/VI046_B400_010_result.tlx	Ctnna2 allelic+promoter deletion (38/3)	2	F
+VI052	data/tlx/VI052_B400_011_result.tlx	Ctnna2 allelic+promoter deletion (38/3)	3	F
