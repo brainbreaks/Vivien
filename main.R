@@ -191,7 +191,8 @@ genes_df
   ggplot(repeatmasker_influence_df, aes(x=breaks_explained, y=total_width)) +
     geom_point(aes(size=repeats_count)) +
     # geom_smooth(method="lm", formula=y~x+0) +
-    ggrepel::geom_text_repel(aes(label=group))
+    ggrepel::geom_text_repel(aes(label=group)) +
+    facet_wrap(~sample, scales="free")
 
 
   repeatmasker_influence_df = repeatmasker_influence_df %>%
