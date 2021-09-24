@@ -128,22 +128,13 @@ main = function()
     dplyr::filter(gene_length>=200e3 & gene_chrom=="chr6") %>%
     dplyr::arrange(dplyr::desc(gene_length)) %>%
     data.frame()
-genes_df
-
-
 
   repeatmasker_df = repeatmasker_read("genomes/mm10/annotation/ucsc_repeatmasker.tsv")
-  repeatmasker_df %>%
-    dplyr::arrange(repeatmasker_chrom, repeatmasker_start, repeatmasker_strand) %>%
-    dplyr::mutate(repeatmasker_score=1, repeatmasker_name=paste0(repeatmasker_family, "--", repeatmasker_class, "--", repeatmasker_name)) %>%
-    dplyr::select(repeatmasker_chrom, repeatmasker_start, repeatmasker_end, repeatmasker_name, repeatmasker_score, repeatmasker_strand) %>%
-    readr::write_tsv(file="genomes/mm10/annotation/ucsc_repeatmasker.bed", col_names=F)
-  x = repeatmasker_df %>%
-    dplyr::filter(repeatmasker_family=="rRNA") %>%
-    dplyr::arrange(repeatmasker_chrom, repeatmasker_start, repeatmasker_strand) %>%
-    dplyr::mutate(repeatmasker_score=1, repeatmasker_name=paste0(repeatmasker_family, "--", repeatmasker_class, "--", repeatmasker_name)) %>%
-    dplyr::select(repeatmasker_chrom, repeatmasker_start, repeatmasker_end, repeatmasker_name, repeatmasker_score, repeatmasker_strand) %>%
-    readr::write_tsv(file="genomes/mm10/annotation/ucsc_repeatmasker_rRNA.bed", col_names=F)
+  # repeatmasker_df %>%
+  #   dplyr::arrange(repeatmasker_chrom, repeatmasker_start, repeatmasker_strand) %>%
+  #   dplyr::mutate(repeatmasker_score=1, repeatmasker_name=paste0(repeatmasker_family, "--", repeatmasker_class, "--", repeatmasker_name)) %>%
+  #   dplyr::select(repeatmasker_chrom, repeatmasker_start, repeatmasker_end, repeatmasker_name, repeatmasker_score, repeatmasker_strand) %>%
+  #   readr::write_tsv(file="genomes/mm10/annotation/ucsc_repeatmasker.bed", col_names=F)
 
   samples_df = readr::read_tsv("data/tlx_samples.tsv") %>%
     dplyr::mutate(group_short=dplyr::case_when(
@@ -153,7 +144,15 @@ genes_df
       group=="Ctnna2 allelic+promoter deletion (38/3)" ~ "fndr-prom2"
     ))
 
-  tlx_df = tlx_read_many(samples_df)
+  tlx_df = tlx_read_many(samples_df) %>% dplyr::mutate(QSeq = substr(Seq, Qstart, Qend))
+  writeLines(paste0(">", tlx_df$Qname, "\n", tlx_df$QSeq), con="data/tlx_Qseq.fa")
+  system("dustmasker -in data/tlx_Qseq.fa -out data/tlx_Qseq.dust -outfmt acclist")
+  tlx_dust_df = readr::read_tsv("data/tlx_Qseq.dust", col_names=c("Qname", "dust_start", "dust_end")) %>%
+    dplyr::mutate(tlx_is_low_complexity=T) %>%
+    dplyr::distinct(Qname, tlx_is_low_complexity)
+  tlx_df = tlx_df %>%
+    dplyr::left_join(tlx_dust_df, by="Qname") %>%
+    dplyr::mutate(tlx_is_low_complexity=tidyr::replace_na(tlx_is_low_complexity, F))
   tlx_df = tlx_mark_rand_chromosomes(tlx_df)
   tlx_df = tlx_mark_bait_chromosome(tlx_df)
   tlx_df = tlx_mark_bait_junctions(tlx_df, 1.5e6)
@@ -163,49 +162,6 @@ genes_df
     dplyr::select(-Seq) %>%
     dplyr::mutate(tlx_id=1:n()) %>%
     dplyr::ungroup()
-
-  repeatmasker_df = repeatmasker_df %>%
-    dplyr::mutate(repeatmasker_group=paste(repeatmasker_df$repeatmasker_class, "/", repeatmasker_df$repeatmasker_family, "/", repeatmasker_df$repeatmasker_name)) %>%
-    dplyr::group_by(repeatmasker_group) %>%
-    dplyr::mutate(repeatmasker_group_n=n()) %>%
-    dplyr::ungroup()
-
-  repeatmasker_influence_df = data.frame()
-  for(s in 1:nrow(samples_df)) {
-    smpl = samples_df[1,, drop=F]
-    tlx_franges = GenomicRanges::makeGRangesFromDataFrame(tlx_fdf %>% dplyr::filter(tlx_sample==smpl) %>% dplyr::mutate(seqnames=Rname, start=Junction-1e3, end=Junction+1e3, Strand="*"))
-    unique_groups = unique(repeatmasker_df$repeatmasker_group[repeatmasker_df$repeatmasker_group_n>=100])
-    for(rm in unique_groups) {
-      writeLines(paste(which(rm==unique_groups), "/", length(unique_groups)))
-      rm_df = repeatmasker_df %>% dplyr::filter(repeatmasker_group==rm)
-      rm_ranges = GenomicRanges::makeGRangesFromDataFrame(rm_df %>% dplyr::mutate(seqnames=repeatmasker_chrom, start=repeatmasker_start, end=repeatmasker_end))
-      rm_reduced_ranges = GenomicRanges::reduce(rm_ranges)
-      overlaps = GenomicRanges::countOverlaps(tlx_franges, rm_reduced_ranges)
-      repeatmasker_influence_df = rbind(repeatmasker_influence_df, data.frame(sample=paste(smpl$group_short, smpl$sample), group=rm, repeats_count=nrow(rm_df), total_width=sum(width(rm_reduced_ranges)), breaks_explained=mean(overlaps>0), overlaps_count=sum(overlaps)))
-    }
-    repeatmasker_influence_df = repeatmasker_influence_df %>%
-      dplyr::arrange(breaks_explained/total_width) %>%
-      dplyr::mutate(i=1:n())
-  }
-
-  ggplot(repeatmasker_influence_df, aes(x=breaks_explained, y=total_width)) +
-    geom_point(aes(size=repeats_count)) +
-    # geom_smooth(method="lm", formula=y~x+0) +
-    ggrepel::geom_text_repel(aes(label=group)) +
-    facet_wrap(~sample, scales="free")
-
-
-  repeatmasker_influence_df = repeatmasker_influence_df %>%
-    dplyr::arrange(breaks_explained) %>%
-    dplyr::mutate(i=1:n())
-  ggplot(repeatmasker_influence_df, aes(x=i, y=breaks_explained*100)) +
-    geom_point(aes(size=repeats_count)) +
-    labs(y="breaks explained, %") +
-    ggrepel::geom_text_repel(aes(label=family))
-
-  ggplot(repeatmasker_influence_df, aes(x=breaks_explained, y=repeats_count)) +
-    geom_point() +
-    ggrepel::geom_text_repel(aes(label=family))
 
   #
   # Export data for IGV
@@ -220,20 +176,15 @@ genes_df
     rtracklayer::export.bedGraph(tlxcov_export_ranges, tlxcov_file)
   }
 
-
-  roi_df = data.frame(
-    roi_gene=c("Ccser1", "Grid2", "Ctnna2", "Magi1", "Sox5"),
-    roi_chrom="chr6",
-    roi_start=c(61180325, 63255903, 76881637, 93675453, 143828425),
-    roi_end=c(62382863, 64704322, 77979703, 94283920, 144781989),
-    roi_peak=c(75, 55, 220, 90, 36),
-    roi_peak=c("longest transcript", "longest transcript", "longest transcript", "longest transcript", "longest transcript")
-  )
-
+  #
+  # Analize variability using different normalization strategy
+  #
+  roi_df = readr::read_tsv("data/roi.tsv")
+  roi_ranges = GenomicRanges::makeGRangesFromDataFrame(roi_df %>% dplyr::mutate(seqnames=roi_chrom, start=roi_start, end=roi_end), keep.extra.columns=T)
   libsizes_df = tlx_df %>%
     dplyr::group_by(tlx_sample) %>%
     dplyr::summarize(
-      libsize_raw=100,
+      libsize_unnormalized=100,
       libsize_all=n(),
       libsize_nobait=sum(!tlx_is_bait_junction),
       libsize_norepeats=sum(is.na(tlx_repeatmasker_class)),
@@ -241,7 +192,13 @@ genes_df
       libsize_baitchr_nobait=sum(tlx_is_bait_chromosome & !tlx_is_bait_junction),
       libsize_baitchr_norepeats=sum(tlx_is_bait_chromosome & is.na(tlx_repeatmasker_class)),
       libsize_baitchr_nobait_norepeats=sum(tlx_is_bait_chromosome & !tlx_is_bait_junction & is.na(tlx_repeatmasker_class)),
-
+      libsize_lowcomplex=sum(!tlx_is_low_complexity),
+      libsize_lowcomplex_nobait=sum(!tlx_is_low_complexity & !tlx_is_bait_junction),
+      libsize_lowcomplex_norepeats=sum(!tlx_is_low_complexity & is.na(tlx_repeatmasker_class)),
+      libsize_lowcomplex_nobait_norepeats=sum(!tlx_is_low_complexity & !tlx_is_bait_junction & is.na(tlx_repeatmasker_class)),
+      libsize_lowcomplex_baitchr_nobait=sum(!tlx_is_low_complexity & tlx_is_bait_chromosome & !tlx_is_bait_junction),
+      libsize_lowcomplex_baitchr_norepeats=sum(!tlx_is_low_complexity & tlx_is_bait_chromosome & is.na(tlx_repeatmasker_class)),
+      libsize_lowcomplex_baitchr_nobait_norepeats=sum(!tlx_is_low_complexity & tlx_is_bait_chromosome & !tlx_is_bait_junction & is.na(tlx_repeatmasker_class))
     ) %>%
     reshape2::melt(id.vars="tlx_sample", variable.name="libsize_var", value.name="libsize_val") %>%
     dplyr::mutate(libsize_var=gsub("libsize_", "", as.character(libsize_var))) %>%
@@ -249,11 +206,38 @@ genes_df
     dplyr::mutate(libsize_factor=max(libsize_val)/libsize_val) %>%
     dplyr::ungroup()
 
-  tlx_fdf = tlx_df %>%
-    dplyr::filter(!tlx_is_bait_junction & !tlx_is_rand_chrom) %>%
-    dplyr::select(-Seq) %>%
-    dplyr::mutate(tlx_id=1:n()) %>%
+
+  tlx_ranges = GenomicRanges::makeGRangesFromDataFrame(tlx_df %>% dplyr::mutate(seqnames=Rname, start=Junction, end=Junction), ignore.strand=T, keep.extra.columns=T)
+  tlx2roi_df = as.data.frame(IRanges::mergeByOverlaps(roi_ranges, tlx_ranges)) %>%
+    dplyr::group_by(tlx_sample, roi_gene, roi_chrom, roi_start, roi_end, roi_peak) %>%
+    dplyr::summarize(breaks=n())
+  tlx2roi_norm_df = tlx2roi_df %>%
+    dplyr::inner_join(libsizes_df, by=c("tlx_sample")) %>%
+    dplyr::mutate(breaks_norm=breaks*libsize_factor) %>%
+    dplyr::inner_join(samples_df, by=c("tlx_sample"="sample")) %>%
+    dplyr::group_by(group, roi_gene, roi_chrom, roi_start, roi_end) %>%
+    dplyr::mutate(breaks_norm_peak=breaks_norm/roi_peak[1]) %>%
+    dplyr::mutate(breaks_norm_rel=breaks_norm/max(breaks_norm)) %>%
     dplyr::ungroup()
+
+  x = tlx2roi_norm_df %>%
+    dplyr::filter(!control & (roi_gene!="Ctnna2" | grepl("47|NXP010", group)) & grepl("Ccser1|Ctnna2|Grid2", roi_gene)) %>%
+    dplyr::group_by(roi_gene, libsize_var, group) %>%
+    dplyr::summarize(sd=sd(breaks_norm_rel), mean=mean(breaks_norm_rel))
+  # pheatmap::pheatmap(x %>% dplyr::mutate(cov=sd/mean) %>% reshape2::dcast(libsize_var ~ roi_gene, value.var="cov", fun.aggregate=mean) %>% tibble::column_to_rownames("libsize_var"))
+
+  ggplot(x, aes(x=reorder(libsize_var, sd/mean, median), y=sd/mean, group=libsize_var)) +
+    geom_boxplot(outlier.shape=NA) +
+    geom_point(aes(fill=roi_gene), shape=21, size=2, position=position_jitter()) +
+    coord_flip()
+  ggplot(tlx2roi_norm_df, aes(x=group, y=breaks_norm_rel, fill=ifelse(control, "DMSO", "APH"))) +
+    geom_boxplot(outlier.shape=NA) +
+    geom_point(shape=21, size=2, position=position_jitterdodge()) +
+    facet_grid(roi_gene~libsize_var, scales="free") +
+    labs(fill="Treatment") +
+    coord_flip()
+
+
   tlxcov_df = tlx_coverage(tlx_fdf, group="sample", extsize=5e3, exttype="symmetrical") %>%
     dplyr::filter(!tlx_control)
 
