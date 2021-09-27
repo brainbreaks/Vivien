@@ -6,7 +6,7 @@ VI053	data/tlx/VI053_B400_012_result.tlx	Perental cell (NXP010)	4	T
 VI021	data/tlx/VI021_B400_006_result.tlx	Perental cell (NXP010)	1	F
 VI028	data/tlx/VI028_B400_006_result.tlx	Perental cell (NXP010)	2	F
 VI048	data/tlx/VI048_B400_011_result.tlx	Perental cell (NXP010)	3	F
-VI054	data/tlx/VI054_B400_012_result.tlx	Perental cell (NXP010)		F
+VI054	data/tlx/VI054_B400_012_result.tlx	Perental cell (NXP010)	4	F
 LC0027	data/tlx/LC0027_B400_005_result.tlx	Ctnna2 allelic deletion (47/5)	1	T
 VI022	data/tlx/VI022_B400_006_result.tlx	Ctnna2 allelic deletion (47/5)	2	T
 VI043	data/tlx/VI043_B400_010_result.tlx	Ctnna2 allelic deletion (47/5)	3	T
